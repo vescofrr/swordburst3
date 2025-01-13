@@ -1,225 +1,113 @@
--- Swordburst 3 Advanced Script
--- Features: Auto-Farm, Aimbot, Teleportation, and GUI (similar to RedzHub style)
--- Developed based on user's request
+-- Vallkyrion: Blox Fruits GUI Script
+-- Save this script in your GitHub repository
 
--- Services
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
-local VirtualInputManager = game:GetService("VirtualInputManager") -- For simulating clicks
-local PathfindingService = game:GetService("PathfindingService")
-local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService") -- For unique IDs
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local CloseButton = Instance.new("TextButton")
+local FeaturesFrame = Instance.new("ScrollingFrame")
+local UIPadding = Instance.new("UIPadding")
+local UIListLayout = Instance.new("UIListLayout")
 
--- Player and Character
-local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
-local RootPart = Character:WaitForChild("HumanoidRootPart")
-local Camera = Workspace.CurrentCamera
+-- ScreenGui Properties
+ScreenGui.Name = "VallkyrionGUI"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Configurations
-local config = {
-    isBotEnabled = false,
-    isAimbotEnabled = false,
-    isESPEnabled = false,
-    autoFarmEnabled = false,
-    teleportLocations = {
-        {name = "Spawn", position = Vector3.new(0, 10, 0)},
-        {name = "Boss", position = Vector3.new(1000, 20, -500)}
-    },
-    attackCooldown = 0.5, -- Cooldown for attacks
-    attackRange = 20 -- Distance within which attacks will occur
-}
+-- MainFrame Properties
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.3, 0, 0.2, 0)
+MainFrame.Size = UDim2.new(0, 400, 0, 300)
 
-local lockedTarget = nil -- Aimbot target
+-- Title Properties
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Title.BorderSizePixel = 0
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "Vallkyrion: Blox Fruits"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 20
 
--- GUI Creation
-local function createGUI()
-    local ScreenGui = Instance.new("ScreenGui")
-    local MainFrame = Instance.new("Frame")
-    local EnableBotButton = Instance.new("TextButton")
-    local EnableAimbotButton = Instance.new("TextButton")
-    local EnableESPButton = Instance.new("TextButton")
-    local EnableAutoFarmButton = Instance.new("TextButton")
-    local TeleportDropdown = Instance.new("TextButton")
-    local StatusLabel = Instance.new("TextLabel")
+-- CloseButton Properties
+CloseButton.Name = "CloseButton"
+CloseButton.Parent = MainFrame
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+CloseButton.BorderSizePixel = 0
+CloseButton.Position = UDim2.new(0.9, -10, 0, 10)
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 18
 
-    -- Screen GUI
-    ScreenGui.Name = "SwordburstBotGUI"
-    ScreenGui.Parent = game:GetService("CoreGui")
+-- FeaturesFrame Properties
+FeaturesFrame.Name = "FeaturesFrame"
+FeaturesFrame.Parent = MainFrame
+FeaturesFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+FeaturesFrame.BorderSizePixel = 0
+FeaturesFrame.Position = UDim2.new(0, 0, 0, 50)
+FeaturesFrame.Size = UDim2.new(1, 0, 1, -50)
+FeaturesFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
+FeaturesFrame.ScrollBarThickness = 6
 
-    MainFrame.Name = "MainFrame"
-    MainFrame.Parent = ScreenGui
-    MainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    MainFrame.Size = UDim2.new(0, 300, 0, 400)
-    MainFrame.Position = UDim2.new(0.05, 0, 0.05, 0)
-    MainFrame.Active = true
-    MainFrame.Draggable = true
+-- UIPadding for FeaturesFrame
+UIPadding.Parent = FeaturesFrame
+UIPadding.PaddingLeft = UDim.new(0, 5)
+UIPadding.PaddingTop = UDim.new(0, 5)
 
-    EnableBotButton.Name = "EnableBotButton"
-    EnableBotButton.Parent = MainFrame
-    EnableBotButton.Text = "Enable Bot"
-    EnableBotButton.Size = UDim2.new(0, 280, 0, 50)
-    EnableBotButton.Position = UDim2.new(0, 10, 0, 10)
-    EnableBotButton.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
+-- UIListLayout for FeaturesFrame
+UIListLayout.Parent = FeaturesFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
 
-    EnableBotButton.MouseButton1Click:Connect(function()
-        config.isBotEnabled = not config.isBotEnabled
-        EnableBotButton.Text = config.isBotEnabled and "Disable Bot" or "Enable Bot"
-        EnableBotButton.BackgroundColor3 = config.isBotEnabled and Color3.fromRGB(200, 100, 100) or Color3.fromRGB(100, 200, 100)
-    end)
+-- Utility Function to Create Buttons for Features
+local function createFeatureButton(text, callback)
+    local Button = Instance.new("TextButton")
+    Button.Parent = FeaturesFrame
+    Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Button.BorderSizePixel = 0
+    Button.Size = UDim2.new(1, -10, 0, 40)
+    Button.Font = Enum.Font.SourceSans
+    Button.Text = text
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 18
 
-    EnableAimbotButton.Name = "EnableAimbotButton"
-    EnableAimbotButton.Parent = MainFrame
-    EnableAimbotButton.Text = "Enable Aimbot"
-    EnableAimbotButton.Size = UDim2.new(0, 280, 0, 50)
-    EnableAimbotButton.Position = UDim2.new(0, 10, 0, 70)
-    EnableAimbotButton.BackgroundColor3 = Color3.fromRGB(100, 100, 200)
-
-    EnableAimbotButton.MouseButton1Click:Connect(function()
-        config.isAimbotEnabled = not config.isAimbotEnabled
-        EnableAimbotButton.Text = config.isAimbotEnabled and "Disable Aimbot" or "Enable Aimbot"
-        EnableAimbotButton.BackgroundColor3 = config.isAimbotEnabled and Color3.fromRGB(200, 100, 200) or Color3.fromRGB(100, 100, 200)
-    end)
-
-    EnableESPButton.Name = "EnableESPButton"
-    EnableESPButton.Parent = MainFrame
-    EnableESPButton.Text = "Enable ESP"
-    EnableESPButton.Size = UDim2.new(0, 280, 0, 50)
-    EnableESPButton.Position = UDim2.new(0, 10, 0, 130)
-    EnableESPButton.BackgroundColor3 = Color3.fromRGB(200, 200, 100)
-
-    EnableESPButton.MouseButton1Click:Connect(function()
-        config.isESPEnabled = not config.isESPEnabled
-        EnableESPButton.Text = config.isESPEnabled and "Disable ESP" or "Enable ESP"
-        EnableESPButton.BackgroundColor3 = config.isESPEnabled and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(200, 200, 100)
-    end)
-
-    EnableAutoFarmButton.Name = "EnableAutoFarmButton"
-    EnableAutoFarmButton.Parent = MainFrame
-    EnableAutoFarmButton.Text = "Enable Auto-Farm"
-    EnableAutoFarmButton.Size = UDim2.new(0, 280, 0, 50)
-    EnableAutoFarmButton.Position = UDim2.new(0, 10, 0, 190)
-    EnableAutoFarmButton.BackgroundColor3 = Color3.fromRGB(150, 150, 255)
-
-    EnableAutoFarmButton.MouseButton1Click:Connect(function()
-        config.autoFarmEnabled = not config.autoFarmEnabled
-        EnableAutoFarmButton.Text = config.autoFarmEnabled and "Disable Auto-Farm" or "Enable Auto-Farm"
-        EnableAutoFarmButton.BackgroundColor3 = config.autoFarmEnabled and Color3.fromRGB(255, 150, 150) or Color3.fromRGB(150, 150, 255)
-    end)
-
-    TeleportDropdown.Name = "TeleportDropdown"
-    TeleportDropdown.Parent = MainFrame
-    TeleportDropdown.Text = "Teleport"
-    TeleportDropdown.Size = UDim2.new(0, 280, 0, 50)
-    TeleportDropdown.Position = UDim2.new(0, 10, 0, 250)
-    TeleportDropdown.BackgroundColor3 = Color3.fromRGB(150, 255, 150)
-
-    TeleportDropdown.MouseButton1Click:Connect(function()
-        for _, location in ipairs(config.teleportLocations) do
-            print("Teleporting to", location.name)
-            RootPart.CFrame = CFrame.new(location.position)
-            wait(1)
-        end
-    end)
-
-    StatusLabel.Name = "StatusLabel"
-    StatusLabel.Parent = MainFrame
-    StatusLabel.Text = "Status: Idle"
-    StatusLabel.Size = UDim2.new(0, 280, 0, 20)
-    StatusLabel.Position = UDim2.new(0, 10, 0, 310)
-    StatusLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    StatusLabel.TextScaled = true
-
-    return StatusLabel
+    -- Trigger the callback when button is clicked
+    Button.MouseButton1Click:Connect(callback)
 end
 
-local StatusLabel = createGUI()
+-- Define Feature Buttons
+createFeatureButton("Auto Farm", function()
+    print("Auto Farm activated")
+    -- Add your Auto Farm script logic here
+end)
 
--- NPC Finder
-local function findClosestNPC()
-    local closestNPC = nil
-    local closestDistance = math.huge
+createFeatureButton("Teleport to Island", function()
+    print("Teleport activated")
+    -- Add your Teleport script logic here
+end)
 
-    for _, npc in ipairs(Workspace:GetDescendants()) do
-        if npc:IsA("Model") and npc:FindFirstChild("Humanoid") and npc:FindFirstChild("HumanoidRootPart") then
-            local distance = (npc.HumanoidRootPart.Position - RootPart.Position).Magnitude
-            if distance < closestDistance and npc.Humanoid.Health > 0 then
-                closestNPC = npc
-                closestDistance = distance
-            end
-        end
-    end
+createFeatureButton("ESP (Player)", function()
+    print("ESP activated")
+    -- Add your ESP script logic here
+end)
 
-    return closestNPC
-end
+createFeatureButton("Devil Fruit Sniper", function()
+    print("Sniper activated")
+    -- Add your Devil Fruit Sniper script logic here
+end)
 
--- Aimbot Logic
-local function aimAt(target)
-    if target and target:FindFirstChild("HumanoidRootPart") then
-        local npcPosition = target.HumanoidRootPart.Position
-        local screenPoint = Camera:WorldToViewportPoint(npcPosition)
+createFeatureButton("Stat Allocation", function()
+    print("Stat Allocation activated")
+    -- Add your Stat Allocation script logic here
+end)
 
-        VirtualInputManager:SendMouseMoveEvent(screenPoint.X, screenPoint.Y, game)
-    end
-end
-
--- Attack NPC
-local function attackNPC(npc)
-    if not npc then return end
-
-    StatusLabel.Text = "Status: Attacking " .. npc.Name
-    while npc.Humanoid.Health > 0 do
-        if config.isAimbotEnabled then
-            aimAt(npc)
-        end
-
-        -- Default attack (simulate left-click)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
-        wait(0.1)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
-        wait(config.attackCooldown)
-    end
-
-    StatusLabel.Text = "Status: Idle"
-end
-
--- ESP Logic
-local function createESP(target)
-    local box = Drawing.new("Square")
-    box.Color = Color3.fromRGB(255, 0, 0)
-    box.Thickness = 2
-    box.Filled = false
-
-    RunService.RenderStepped:Connect(function()
-        if not target or target.Humanoid.Health <= 0 then
-            box:Remove()
-            return
-        end
-
-        local rootPos = Camera:WorldToViewportPoint(target.HumanoidRootPart.Position)
-        box.Size = Vector2.new(100, 100)
-        box.Position = Vector2.new(rootPos.X - 50, rootPos.Y - 50)
-    end)
-end
-
--- Main Bot Logic
-local function botLoop()
-    while RunService.Heartbeat:Wait() and config.isBotEnabled do
-        if config.autoFarmEnabled then
-            local npc = findClosestNPC()
-            if npc then
-                if config.isESPEnabled then
-                    createESP(npc)
-                end
-
-                attackNPC(npc)
-            end
-        end
-    end
-end
-
--- Start Bot Loop
-spawn(botLoop)
+-- CloseButton Functionality
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
